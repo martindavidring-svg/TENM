@@ -1,0 +1,62 @@
+<!doctype html><html lang="sv"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>TENM</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#f4f6f8;color:#17202a;font:16px system-ui,sans-serif}header{background:#111827;color:#fff;padding:18px}main{max-width:1000px;margin:18px auto;padding:0 14px}.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}button,select,input{font:inherit;border:1px solid #d5dbe5;border-radius:10px;padding:10px 12px;background:#fff}button{cursor:pointer}.p{background:#2563eb;color:#fff;border-color:#2563eb}.stats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.st{background:#fff;border:1px solid #d5dbe5;border-radius:10px;padding:8px 13px}.st b{display:block;font-size:19px}.prog{height:7px;background:#ddd;border-radius:9px;margin:10px 0 15px}.prog i{display:block;height:100%;background:#2563eb;width:0}.card{background:#fff;border:1px solid #d5dbe5;border-radius:15px;padding:24px}.tag{color:#3730a3;background:#eef2ff;padding:4px 9px;border-radius:99px;font-size:12px}.q{font-size:23px;line-height:1.45;margin:16px 0}.ans{width:100%;margin-bottom:9px}.f{font:28px Georgia,serif;text-align:center;line-height:1.7;margin:15px 0}.v{text-decoration:overline}.fb{font-weight:700;margin:12px 0}.ok{color:#16803c}.no{color:#c62828}.ex{background:#f8fafc;border-left:4px solid #2563eb;padding:12px 14px;margin-top:12px;line-height:1.5}.hint,.small{font-size:13px;color:#667085}.choices{display:grid;gap:8px}.choices button{text-align:left;font:18px Georgia,serif}.prob{background:#f8fafc;padding:13px;border-radius:10px;margin-bottom:15px;line-height:1.5}.hidden{display:none}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:9px}.item{padding:13px;border:1px solid #d5dbe5;border-radius:10px}
+</style><body><header><h1>🧠 TENM – Formel- & Problemträning</h1><div>Förstå när och varför en formel används.</div></header><main>
+<div class="bar"><button class="p" onclick="go('problem')">🧩 Problemträning</button><button onclick="go('write')">✍️ Skriv formel</button><button onclick="go('choose')">🎯 Välj formel</button><button onclick="go('concept')">💡 Begrepp & symboler</button><button onclick="bank()">📚 Formelbank</button><select id="flt" onchange="go(mode)"><option value="all">Alla</option><option value="current">Stationär ström</option><option value="motion">Rörelse-EMK</option><option value="flux">Flöde/Faraday</option></select></div>
+<div class="stats"><div class="st"><b id="n">0</b>besvarade</div><div class="st"><b id="r">0</b>rätt</div><div class="st"><b id="a">0%</b>träffsäkerhet</div></div><div class="prog"><i id="pr"></i></div>
+<section class="card"><span id="tag" class="tag">TENM</span><div id="q" class="q"></div><div id="area"></div><div id="fb" class="fb"></div><div id="ex" class="ex hidden"></div><button id="nx" class="p hidden" onclick="next()">Nästa →</button></section>
+<section id="bk" class="card hidden" style="margin-top:14px"><h2>Formelbank</h2><div id="list" class="grid"></div></section>
+</main><script>
+const V=s=>'<span class="v">'+s+'</span>';
+const F=[
+['Ohms lag','current',V('J')+'=σ'+V('E'),'J=strömtäthet, σ=konduktivitet, E=elektriskt fält'],
+['Kontinuitet','current','∇·'+V('J')+'+∂ρ/∂t=0','∇·J=divergens av strömtätheten, ρ=laddningstäthet, ∂ρ/∂t=ändring av ρ med tiden'],
+['EMK','motion','ℰ=∮<sub>C</sub>('+V('E')+'+'+V('v')+'×'+V('B')+')·d'+V('l'),'ℰ=elektromotorisk kraft, v=hastighet, B=magnetisk flödestäthet'],
+['Faraday','flux','ℰ=−dΦ/dt','Φ=magnetiskt flöde; minustecknet är Lenz lag'],
+['Flöde','flux','Φ=∫<sub>S</sub>'+V('B')+'·d'+V('S'),'B=magnetisk flödestäthet, dS=riktat ytelement'],
+['Lorentzkraft','motion',V('F')+'=q'+V('v')+'×'+V('B'),'F=kraft på q, v=hastighet, B=magnetisk flödestäthet']
+];
+const C=[
+['Vad betyder ρ?','ρ är laddningstäthet.','∂ρ/∂t är hur laddningstätheten ändras med tiden.','current'],
+['Vad betyder ∇·J?','Divergensen av strömtätheten J.','På tangentbord: “nabla dot J” eller “div J”.','current'],
+['Vad betyder σ?','Konduktivitet.','σ beskriver materialets ledningsförmåga.','current'],
+['Vad beskriver EMK?','Den spänning som driver laddningar runt en sluten krets.','Detta är definitionen i Övning 13.','motion'],
+['Vad kan ändra magnetiskt flöde?','B-fältet, arean eller ytans normalriktning kan ändras.','Då förändras Φ och en EMK kan induceras.','flux']
+];
+const P=[
+{t:'Stationär ström mellan cylindrar',g:'current',s:'Två koaxiala metallcylindrar har given ström I och σ(s)=k/s. Resistansen R söks.',qs:[
+['Vad tar oss först från I till J?',['I=∫S J·dS','U=RI','J=σE','E=−∇V'],0,'Samma stationära ström passerar genom varje cylindrisk yta.'],
+['När J är radiell, vilket uttryck fås för en cylinderyta med radie s och längd L?',['J(s)=I/(2πsL)','J(s)=I·2πsL','J(s)=σE','J(s)=U/R'],0,'Sätt I=∫S J·dS=2πsLJ(s).'],
+['Vilken lag går från J till E?',['J=σE','I=∫S J·dS','U=RI','Φ=∫B·dS'],0,'Ohms lag i ledande medium.'],
+['Hur får vi U?',['U=∫ E·dl','U=RI/t','U=∫B·dS','U=∫E×B·dl'],0,'Spänningen fås genom linjeintegralen av E.'],
+['Hur får vi R?',['R=U/I','R=I/U','R=UI','R=U+I'],0,'När U och I är kända använder du R=U/I.']
+]},
+{t:'Rörlig ledarstav i B-fält',g:'motion',s:'En metallstav med längd l rör sig med hastighet v i ett homogent B-fält och ingår i en sluten krets med R.',qs:[
+['Vilket samband ger först rörelse-EMK?',['ℰ=∮(v×B)·dl','ℰ=−dΦ/dt','J=σE','F=qv×B'],0,'Rörelsebidraget kommer från Lorentzkraften på laddningarna.'],
+['När ℰ=Blv, vad ger strömmen?',['I=ℰ/R','I=R/ℰ','I=ℰR','I=Bl/R'],0,'Ohms lag för hela kretsen.'],
+['Vilket kraftsamband används för den strömförande staven?',['dF=I dl×B','F=qv×B','U=RI','Φ=∫B·dS'],0,'Kraften på en strömfördelning beräknas från dF.']
+]},
+{t:'Roterande slinga',g:'flux',s:'En kvadratisk slinga med area a² roterar med vinkelhastighet ω i ett homogent B-fält. B pekar i x-led. Vid t=0 pekar normalvektorn n̂ i x-led och slingan roterar i positiv z-riktning.',qs:[
+['Vad behöver du bestämma först för att få EMK?',['Magnetiskt flöde Φ(t)','Resistansen R','Strömtätheten J','Kraften F'],0,'Faradays lag kopplar EMK till flödesändringen.'],
+['Om B pekar i x-led och normalen roterar, vad blir flödet?',['Φ(t)=Ba²cos(ωt)','Φ(t)=Ba²sin(ωt)','Φ(t)=B/a²','Φ(t)=0'],0,'B·n(t)=Bcos(ωt).'],
+['Vilken lag används sist?',['ℰ=−dΦ/dt','J=σE','F=qv×B','R=U/I'],0,'Faradays induktionslag.']
+]}
+];
+let mode='problem',deck=[],i=0,step=0,answered=false,S=JSON.parse(localStorage.getItem('tenmS')||'{"n":0,"r":0}');
+function sh(a){return [...a].sort(()=>Math.random()-.5)}
+function filt(arr){let f=document.getElementById('flt').value;return f==='all'?arr:arr.filter(x=>x[1]===f||x.g===f)}
+function go(m){mode=m;document.getElementById('bk').classList.add('hidden');step=0;build();render()}
+function build(){let f=document.getElementById('flt').value;if(mode==='problem')deck=sh(P.filter(x=>f==='all'||x.g===f));else if(mode==='write'||mode==='choose')deck=sh(F.filter(x=>f==='all'||x[1]===f));else deck=sh(C.filter(x=>f==='all'||x[3]===f));i=0}
+function clean(x){return x.toLowerCase().replace(/\s/g,'').replace(/−/g,'-').replace(/×/g,'x').replace(/·/g,'.').replace(/∇/g,'nabla').replace(/∂/g,'d').replace(/ρ/g,'rho').replace(/Φ|φ/g,'phi').replace(/ℰ/g,'emk').replace(/σ/g,'sigma')}
+function smart(k,u){let x=clean(u);if(k===0)return x.includes('j=')&&x.includes('sigma')&&x.includes('e');if(k===1)return (x.includes('nabla')||x.includes('div'))&&x.includes('j')&&x.includes('drho/dt')&&x.includes('=0');if(k===3)return x.includes('-dphi/dt');if(k===4)return x.includes('phi=')&&x.includes('integral')&&x.includes('b')&&x.includes('ds');if(k===5)return x.includes('f=q')&&x.includes('vxb');return x.includes('emk=')&&x.includes('e')&&x.includes('vxb')}
+function render(){answered=false;document.getElementById('fb').textContent='';document.getElementById('ex').classList.add('hidden');document.getElementById('nx').classList.add('hidden');let A=document.getElementById('area');A.innerHTML='';if(mode==='problem'){let p=deck[i];let q=p.qs[step];document.getElementById('tag').textContent=p.t;document.getElementById('q').innerHTML='<div class="prob"><b>Situation</b>'+p.s+'</div>'+q[0];let o=sh(q[1].map((x,j)=>({x,ok:j===q[2]})));A.innerHTML='<div class="choices">'+o.map((x,j)=>'<button onclick="ansP('+j+')">'+x.x+'</button>').join('')+'</div>';window.po=o}else if(mode==='write'){let f=deck[i];document.getElementById('tag').textContent=f[0];document.getElementById('q').textContent='Skriv formeln för: '+f[0];A.innerHTML='<input id="in" class="ans" placeholder="T.ex. nabla dot J + drho/dt = 0"><br><button class="p" onclick="ansW()">Kontrollera</button><div class="hint">Smart rättning: nabla/∇, div, rho/ρ, phi/Φ, x/× och d/dt godtas.</div>'}else if(mode==='choose'){let f=deck[i],o=sh([f,...sh(F.filter(x=>x!==f)).slice(0,3)]);document.getElementById('tag').textContent='Formelval';document.getElementById('q').innerHTML='Vilken formel passar bäst här?';A.innerHTML='<div class="choices">'+o.map((x,j)=>'<button onclick="ansC('+j+')">'+x[2]+'</button>').join('')+'</div>';window.fo=o}else{let c=deck[i];document.getElementById('tag').textContent=c[0];document.getElementById('q').textContent=c[0];A.innerHTML='<button class="p" onclick="revealConcept()">Visa svar</button>'}document.getElementById('pr').style.width=(i/deck.length*100)+'%';stats()}
+function finish(ok,txt){answered=true;S.n++;if(ok)S.r++;localStorage.setItem('tenmS',JSON.stringify(S));document.getElementById('fb').textContent=ok?'✓ Rätt!':'✗ Inte riktigt.';document.getElementById('fb').className='fb '+(ok?'ok':'no');document.getElementById('ex').innerHTML=txt;document.getElementById('ex').classList.remove('hidden');document.getElementById('nx').classList.remove('hidden');stats()}
+function ansP(j){let q=deck[i].qs[step],o=window.po[j];finish(o.ok,'<b>Varför?</b> '+q[3])}
+function ansW(){let f=deck[i],k=F.indexOf(f);finish(smart(k,document.getElementById('in').value),'<b>Rätt svar:</b><div class="f">'+f[2]+'</div><span class="small">'+f[3]+'</span>')}
+function ansC(j){let f=deck[i],ok=window.fo[j]===f;finish(ok,'<b>Rätt tänk:</b><div class="f">'+f[2]+'</div><span class="small">'+f[3]+'</span>')}
+function revealConcept(){let c=deck[i];finish(true,'<b>Svar:</b> '+c[1]+'<br><span class="small">'+c[2]+'</span>')}
+function next(){if(mode==='problem'&&step+1<deck[i].qs.length){step++;render();return}step=0;i++;if(i>=deck.length){build()}render()}
+function stats(){document.getElementById('n').textContent=S.n;document.getElementById('r').textContent=S.r;document.getElementById('a').textContent=S.n?Math.round(100*S.r/S.n)+'%':'0%'}
+function bank(){document.getElementById('bk').classList.remove('hidden');document.getElementById('list').innerHTML=F.map(x=>'<div class="item"><b>'+x[0]+'</b><div class="f">'+x[2]+'</div><div class="small">'+x[3]+'</div></div>').join('');document.getElementById('bk').scrollIntoView({behavior:'smooth'})}
+go('problem');stats();
+</script></body></html>
